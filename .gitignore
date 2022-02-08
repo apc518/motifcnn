@@ -8,5 +8,19 @@
 profile_default/
 ipython_config.py
 
+# python
+__pycache__
+
+*.mp3
+*.wav
+*.png
+./**/*.mp3
+./**/*.wav
+./**/*.png
+
+data
+
+s.py
+
 # Remove previous ipynb_checkpoints
 #   git rm -r .ipynb_checkpoints/
