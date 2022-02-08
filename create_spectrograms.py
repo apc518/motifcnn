@@ -74,7 +74,7 @@ def convert_audio_to_spectogram(filepath):
     # crop the image to get rid of useless high and low frequencies
     im = Image.open(img_buf)
     im_cropped = im.crop((0, 150, 500, 450))
-    im_resized = im_cropped.resize((100, 150))
+    im_resized = im_cropped.resize((100, 300))
     return im_resized
 
 def save_spectrograms_as_png(specs):
