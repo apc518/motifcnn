@@ -39,9 +39,6 @@ def convert_audio_to_spectogram(filepath):
     sr = snd.frame_rate
     audio_data = audiosegment_to_numpy_array(snd)
 
-    # pitch shift by random amount for additional augmentation
-    audio_data = librosa.effects.pitch_shift(audio_data, sr, random.randint(-6, 12))
-
     vertical_res = 4096
     
     # stft is short time fourier transform
@@ -116,9 +113,9 @@ if __name__ == '__main__':
     # print(f'{model.classnames}')
 
     if np.argmax(predictions[0]) == 1:
-        print(f'Yes with confidence {predictions[0][1]}')
+        print(f'Yes with confidence {2 * (predictions[0][1] - 0.5)}')
     elif np.argmax(predictions) == 0:
-        print(f'No with confidence {predictions[0][0]}')
+        print(f'No with confidence {2 * (predictions[0][0] - 0.5)}')
     else:
         print("an error has occurred")
 
