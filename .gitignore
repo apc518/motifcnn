@@ -19,8 +19,12 @@ __pycache__
 ./**/*.png
 
 data
+spec
+val
 
 s.py
+*.zip
+*.tf
 
 # Remove previous ipynb_checkpoints
 #   git rm -r .ipynb_checkpoints/
