@@ -67,8 +67,8 @@ def addnoise(clip : AudioSegment, outpath_stub, duplicate_original=True):
 
 ### Timeshifting 
 
-def timeshift(clip : AudioSegment, outpath_stub, min_shift=250, max_shift=1000, 
-            num_times=3, duplicate_original=True):
+def timeshift(clip : AudioSegment, outpath_stub, min_shift=100, max_shift=800, 
+            num_times=2, duplicate_original=True):
     """
     # Add silence of varying length to the front of the clip and output to mp3
     
@@ -79,25 +79,25 @@ def timeshift(clip : AudioSegment, outpath_stub, min_shift=250, max_shift=1000,
         `./timeshift_clips/myclip1_timeshift_0.mp3`
         `./timeshift_clips/myclip1_timeshift_1.mp3`
     
-    - `min_shift` -- The minium number of milliseconds the timeshift may be. Default is 
-                     250 ms.
+    - `min_shift` -- The minium number of milliseconds the timeshift may be. Default is 250 ms.
 
-    - `max_shift` -- The maximum number of milliseconds the timeshift may be. Default is 
-                     1000 ms. 
+    - `max_shift` -- The maximum number of milliseconds the timeshift may be. Default is 1000 ms. 
 
-    - `num_times` -- The number of times to copy the original sample and add a random 
-                     timeshift. Defualt is 3
+    - `num_times` -- The number of times to copy the original sample and add a random timeshift. Default is 3
         
     - `dulplicate_original -- Whether or not to include a copy of the original in the output.
                             defaults to true.
     """
 
-    if (duplicate_original):
+    clip = effects.normalize(clip)
+
+    if duplicate_original:
         clip.export(f'{outpath_stub}_copy.mp3', format="mp3")
 
     for i in range(num_times):
-        silence = AudioSegment.silent(duration=randrange(min_shift, max_shift))
-        output = silence + clip
+        beginning_silence = AudioSegment.silent(duration=randrange(min_shift, max_shift))
+        ending_silence = AudioSegment.silent(duration=randrange(min_shift, max_shift))
+        output = beginning_silence + clip + ending_silence
         output.export(f'{outpath_stub}_timeshift_{i}.mp3', format="mp3")
 
 
