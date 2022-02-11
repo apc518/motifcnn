@@ -21,6 +21,7 @@ __pycache__
 data
 spec
 val
+test
 
 s.py
 *.zip
