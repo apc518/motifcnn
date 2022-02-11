@@ -23,18 +23,20 @@ import librosa.display
 import librosa.effects
 import matplotlib.pyplot as plt
 import matplotlib
-from pydub import AudioSegment
+from pydub import AudioSegment, effects
 
 from augment import audiosegment_to_numpy_array
 
 matplotlib.use("Agg")
 
-def convert_audio_to_spectogram(filepath):
+def convert_audio_to_spectogram(filepath, normalize=False, augment=True):
     """
     ## create a spectrogram from an audio file
     
     #### Arguments:
     - filepath -- path to the audio file of which a spectrogram will be made
+    - normalize -- whether to normalize audio before converting it to a spectrogram
+    - augment -- whether to apply augmentation (pitch shifting) before turning audio into spectrogram
     
     #### Returns
     - A PIL.Image object of the spectrogram
@@ -42,13 +44,16 @@ def convert_audio_to_spectogram(filepath):
     
     # load sound with pydub
     snd = AudioSegment.from_file(filepath)
+    if normalize:
+        snd = effects.normalize(snd)
 
     # sr == sample rate 
     sr = snd.frame_rate
     audio_data = audiosegment_to_numpy_array(snd)
 
     # pitch shift by random amount for additional augmentation
-    audio_data = librosa.effects.pitch_shift(audio_data, sr, random.randint(-6, 12))
+    if augment:
+        audio_data = librosa.effects.pitch_shift(audio_data, sr, random.randint(-6, 12))
 
     vertical_res = 4096
     
