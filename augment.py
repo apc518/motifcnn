@@ -1,4 +1,5 @@
 import random
+from random import randrange
 from math import ceil
 
 import numpy as np
@@ -63,6 +64,42 @@ def addnoise(clip : AudioSegment, outpath_stub, duplicate_original=True):
     for i in range(0, len(noise_levels)):
         combined = noise.overlay(clip, gain_during_overlay=noise_levels[i])
         combined.export(f"{outpath_stub}_noisy_{i}.mp3", format="mp3")
+
+### Timeshifting 
+
+def timeshift(clip : AudioSegment, outpath_stub, min_shift=250, max_shift=1000, 
+            num_times=3, duplicate_original=True):
+    """
+    # Add silence of varying length to the front of the clip and output to mp3
+    
+    ### Arguments:
+    - `outpath_stub` -- destination path including name of original file.
+        Ex: with outpath_stub=`./timeshift_clips/myclip1.mp3` output may look like:
+        `./timeshift_clips/myclip1_copy.mp3`
+        `./timeshift_clips/myclip1_timeshift_0.mp3`
+        `./timeshift_clips/myclip1_timeshift_1.mp3`
+    
+    - `min_shift` -- The minium number of milliseconds the timeshift may be. Default is 
+                     250 ms.
+
+    - `max_shift` -- The maximum number of milliseconds the timeshift may be. Default is 
+                     1000 ms. 
+
+    - `num_times` -- The number of times to copy the original sample and add a random 
+                     timeshift. Defualt is 3
+        
+    - `dulplicate_original -- Whether or not to include a copy of the original in the output.
+                            defaults to true.
+    """
+
+    if (duplicate_original):
+        clip.export(f'{outpath_stub}_copy.mp3', format="mp3")
+
+    for i in range(num_times):
+        silence = AudioSegment.silent(duration=randrange(min_shift, max_shift))
+        output = silence + clip
+        output.export(f'{outpath_stub}_timeshift_{i}.mp3', format="mp3")
+
 
 
 
@@ -134,7 +171,7 @@ if __name__ == "__main__":
     import os
 
     for pos_or_neg in ["positive", "negative"]:    
-        for index, augmentation in enumerate([timestretch, distort, addnoise]):
+        for index, augmentation in enumerate([timestretch, timeshift, distort, addnoise]):
             indir = f"./data/solo/{pos_or_neg}" if index == 0 else f"./data/augmented_stage_{index}/{pos_or_neg}"
             outdir = f"./data/augmented_stage_{index+1}/{pos_or_neg}"
             if not os.path.isdir(f"./data/augmented_stage_{index+1}"):
