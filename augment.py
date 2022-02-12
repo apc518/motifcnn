@@ -38,8 +38,6 @@ def distort(clip : AudioSegment, outpath_stub, duplicate_original=True):
     defaults to `True`
     """
 
-    clip = effects.normalize(clip)
-    
     # save a copy
     if duplicate_original:
         clip.export(f"{outpath_stub}_copy.mp3", format="mp3")
@@ -69,8 +67,6 @@ def addnoise(clip : AudioSegment, outpath_stub, duplicate_original=True):
     - `duplicate_original` -- whether or not to include a copy of the original in the output\ 
     defaults to `True`
     """
-
-    clip = effects.normalize(clip)
 
     if(duplicate_original):
         clip.export(f"{outpath_stub}_copy.mp3", format="mp3")
@@ -105,8 +101,6 @@ def timeshift(clip : AudioSegment, outpath_stub, min_shift=100, max_shift=800,
     - `dulplicate_original -- Whether or not to include a copy of the original in the output.
                             defaults to true.
     """
-
-    clip = effects.normalize(clip)
 
     if duplicate_original:
         clip.export(f'{outpath_stub}_copy.mp3', format="mp3")
@@ -163,7 +157,6 @@ def timestretch(clip : AudioSegment, outpath_stub, duplicate_original=True):
     defaults to `True`
     """
 
-    clip = effects.normalize(clip)
     if duplicate_original:
         clip.export(f"{outpath_stub}_copy.wav", format="wav")
 
@@ -205,7 +198,7 @@ if __name__ == "__main__":
                 clip = effects.normalize(AudioSegment.from_file(f"{indir}/{item}"))
 
                 # apply augmentation
-                print(f"Augmenting {pos_or_neg} example {item} with {augmentation.__name__}")
+                print(f"Augmenting {item} with {augmentation.__name__}")
                 augmentation(clip, f"{outdir}/{item}")
 
                 # limit to one base example for testing
