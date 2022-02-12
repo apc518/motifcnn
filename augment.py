@@ -1,3 +1,14 @@
+"""
+Usage: python augment.py
+
+Assumes that the directories ./data/solo/positive and ./data/solo/negative exist, and contain only audio files
+
+AUGMENTATION FUNCTIONS:
+Should accept two positional arguments, `clip` and `outpath_stub`, as well as at least one keyword argument, `duplicate_original`.
+Augmentation functions should save both a normalized copy of the clip and an augmented version. See distort() for a example.
+"""
+
+
 import random
 from random import randrange
 from math import ceil
@@ -13,7 +24,8 @@ from pydub.generators import WhiteNoise
 
 def distort(clip : AudioSegment, outpath_stub, duplicate_original=True):
     """
-    ## Distort clip at various levels and output to mp3 files.
+    ## Distort clip by a randomized amount and save.
+    Also saves a copy without added distortion
 
     ### Arguments:
     - `outpath_stub` -- destination path including name of original file.\ 
@@ -28,19 +40,24 @@ def distort(clip : AudioSegment, outpath_stub, duplicate_original=True):
 
     clip = effects.normalize(clip)
     
+    # save a copy
     if duplicate_original:
         clip.export(f"{outpath_stub}_copy.mp3", format="mp3")
     
-    for x in range(2):
-        clip = clip + 8
-        clip.export(f"{outpath_stub}_distorted_{x}.mp3", format="mp3")
+    # augment
+    gain = random.uniform(8,16)
+    clip = clip + gain # add 8 to 16 db gain
+
+    # save the augmented version
+    clip.export(f"{outpath_stub}_distorted.mp3", format="mp3")
 
 
 ### Noise
 
 def addnoise(clip : AudioSegment, outpath_stub, duplicate_original=True):
     """
-    ## Combine clip with varying levels of white noise and output to mp3 files.
+    ## Combine clip with a random amount of white noise and save.
+    Also saves a copy without added noise
 
     ### Arguments:
     - `outpath_stub` -- destination path including name of original file.\ 
@@ -59,18 +76,18 @@ def addnoise(clip : AudioSegment, outpath_stub, duplicate_original=True):
         clip.export(f"{outpath_stub}_copy.mp3", format="mp3")
 
     noise = WhiteNoise().to_audio_segment(duration=len(clip))
+    noise_level = random.uniform(-40, -24)
 
-    noise_levels = [random.uniform(-40, -30), random.uniform(-30, -20)]
-    for i in range(0, len(noise_levels)):
-        combined = noise.overlay(clip, gain_during_overlay=noise_levels[i])
-        combined.export(f"{outpath_stub}_noisy_{i}.mp3", format="mp3")
+    combined = noise.overlay(clip, gain_during_overlay=noise_level)
+    combined.export(f"{outpath_stub}_noisy.mp3", format="mp3")
 
 ### Timeshifting 
 
 def timeshift(clip : AudioSegment, outpath_stub, min_shift=100, max_shift=800, 
-            num_times=2, duplicate_original=True):
+            num_times=1, duplicate_original=True):
     """
-    # Add silence of varying length to the front of the clip and output to mp3
+    # Add a random amount of silence around the clip and save.
+    Also saves a copy without timeshifing
     
     ### Arguments:
     - `outpath_stub` -- destination path including name of original file.
@@ -131,8 +148,9 @@ def make_chunks(audio_segment, chunk_length):
     number_of_chunks = ceil(len(audio_segment) / float(chunk_length))
     return [audio_segment[i * chunk_length:(i + 1) * chunk_length] for i in range(number_of_chunks)]
 
-def timestretch(clip : AudioSegment, outpath_stub):
-    """## Timestretch segments of clip at varying speeds and output to wav files.
+def timestretch(clip : AudioSegment, outpath_stub, duplicate_original=True):
+    """## Timestretch segments of clip at varying speeds and save.
+    Also saves a copy without time-stretching.
 
     ### Arguments:
     - `outpath_stub` -- destination path including name of original file.\ 
@@ -146,25 +164,27 @@ def timestretch(clip : AudioSegment, outpath_stub):
     """
 
     clip = effects.normalize(clip)
-    clip.export(f"{outpath_stub}_copy.wav", format="wav")
+    if duplicate_original:
+        clip.export(f"{outpath_stub}_copy.wav", format="wav")
 
-    sr = clip.frame_rate
-    clipTime = clip.duration_seconds
-    equal_Points = ceil(1000 * clipTime / 5)
-    # print(clipTime)
-    chunks = make_chunks(clip, equal_Points)
-    for x in range(2):
-        combined = np.array([])
-        for chunk in chunks:
-            rate = random.uniform(0.7, 1.3)
-            converted_to_lib = audiosegment_to_numpy_array(chunk)
-            to_append = pyrubberband.pyrb.time_stretch(converted_to_lib, sr, rate)
-            combined = np.append(combined, to_append)
-        # print(combined)
-        sf.write(f"{outpath_stub}_stretched_{x}.wav", combined, sr)
+    sample_rate = clip.frame_rate
+    clip_length = clip.duration_seconds
+    
+    # split up audio into chunks
+    num_chunks = randrange(3,8) # [3,8)
+    chunk_length = ceil(1000 * clip_length / num_chunks)
+    chunks = make_chunks(clip, chunk_length)
 
-# from augment import distort, addnoise, timestretch
-# from pydub import AudioSegment, effects
+    combined = np.array([])
+    for chunk in chunks:
+        # stretch each chunk by a random amount and append it
+        rate = random.uniform(0.7, 1.3)
+        audio_array = audiosegment_to_numpy_array(chunk)
+        to_append = pyrubberband.pyrb.time_stretch(audio_array, sample_rate, rate)
+        combined = np.append(combined, to_append)
+    
+    # save as wav, because soundfile doesnt know how to save as mp3
+    sf.write(f"{outpath_stub}_stretched.wav", combined, sample_rate)
 
 
 if __name__ == "__main__":
@@ -188,8 +208,6 @@ if __name__ == "__main__":
                 print(f"Augmenting {pos_or_neg} example {item} with {augmentation.__name__}")
                 augmentation(clip, f"{outdir}/{item}")
 
-    
-                # limit output for testing
-                # counter += 1
-                # if counter >= 3 and index == 0:
-                    # break
+                # limit to one base example for testing
+                # if index == 0:
+                #     break
