@@ -16,15 +16,7 @@ from create_spectrograms import convert_audio_to_spectogram
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    """
-        Assume there is a model in the directory named model.tf
-    """
-
-    # import warnings
-    # warnings.simplefilter("ignore")
-
     spec_temp_file_name = "./spec.png"
-
 
     # load model
     model_path = ""
