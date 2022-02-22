@@ -1,14 +1,22 @@
 """
-Usage: python augment.py
+Usage: `python augment.py <data_path>`
 
-Assumes that the directories ./data/solo/positive and ./data/solo/negative exist, and contain only audio files
+Takes in command line argument for directory containing the data in the format:
+
+data
+├── negative
+└── positive
+
+The parent directory doesn't have to be named 'data' but the children directories must be called "negative" and "positive". 
+Inside of "positive" and "negative" should be only audio files
 
 AUGMENTATION FUNCTIONS:
 Should accept two positional arguments, `clip` and `outpath_stub`, as well as at least one keyword argument, `duplicate_original`.
 Augmentation functions should save both a normalized copy of the clip and an augmented version. See distort() for a example.
 """
 
-
+import os
+import sys
 import random
 from random import randrange
 from math import ceil
@@ -16,7 +24,7 @@ from math import ceil
 import numpy as np
 import soundfile as sf
 import pyrubberband
-from pydub import AudioSegment, effects
+from pydub import AudioSegment
 from pydub.generators import WhiteNoise
 
 
@@ -43,11 +51,15 @@ def distort(clip : AudioSegment, outpath_stub, duplicate_original=True):
         clip.export(f"{outpath_stub}_copy.mp3", format="mp3")
     
     # augment
-    gain = random.uniform(8,16)
+    gain = random.uniform(6,12)
     clip = clip + gain # add 8 to 16 db gain
 
     # save the augmented version
-    clip.export(f"{outpath_stub}_distorted.mp3", format="mp3")
+    clip.export(f"{outpath_stub}_distorted_0.mp3", format="mp3")
+
+    clip = clip + gain
+    clip.export(f"{outpath_stub}_distorted_1.mp3", format="mp3")
+
 
 
 ### Noise
@@ -72,10 +84,16 @@ def addnoise(clip : AudioSegment, outpath_stub, duplicate_original=True):
         clip.export(f"{outpath_stub}_copy.mp3", format="mp3")
 
     noise = WhiteNoise().to_audio_segment(duration=len(clip))
-    noise_level = random.uniform(-40, -24)
+    noise_level = random.uniform(-46, -32)
 
     combined = noise.overlay(clip, gain_during_overlay=noise_level)
-    combined.export(f"{outpath_stub}_noisy.mp3", format="mp3")
+    combined.export(f"{outpath_stub}_noisy_0.mp3", format="mp3")
+
+    noise_level = random.uniform(-32, -24)
+
+    combined = noise.overlay(clip, gain_during_overlay=noise_level)
+    combined.export(f"{outpath_stub}_noisy_1.mp3", format="mp3")
+    
 
 ### Timeshifting 
 
@@ -180,22 +198,27 @@ def timestretch(clip : AudioSegment, outpath_stub, duplicate_original=True):
     sf.write(f"{outpath_stub}_stretched.wav", combined, sample_rate)
 
 
-if __name__ == "__main__":
-    import os
+def augment(data_dir):
+    """
+    augments the input data in stages
+    returns the directory of the final stage
+    """
 
+    stage_num = 0
     for pos_or_neg in ["positive", "negative"]:    
-        for index, augmentation in enumerate([timestretch, timeshift, distort, addnoise]):
-            indir = f"./data/solo/{pos_or_neg}" if index == 0 else f"./data/augmented_stage_{index}/{pos_or_neg}"
-            outdir = f"./data/augmented_stage_{index+1}/{pos_or_neg}"
-            if not os.path.isdir(f"./data/augmented_stage_{index+1}"):
-                os.mkdir(f"./data/augmented_stage_{index+1}")
+        for index, augmentation in enumerate([timestretch, distort, addnoise]):
+            stage_num = index + 1
+
+            indir = f"{data_dir}/{pos_or_neg}" if index == 0 else f"./data/augmented_stage_{index}/{pos_or_neg}"
+            outdir = f"./data/augmented_stage_{stage_num}/{pos_or_neg}"
+            if not os.path.isdir(f"./data/augmented_stage_{stage_num}"):
+                os.mkdir(f"./data/augmented_stage_{stage_num}")
             if not os.path.isdir(outdir):
                 os.mkdir(outdir)
             
             counter = 0
             for item in os.listdir(indir):
-                # normalize volume of clip first
-                clip = effects.normalize(AudioSegment.from_file(f"{indir}/{item}"))
+                clip = AudioSegment.from_file(f"{indir}/{item}")
 
                 # apply augmentation
                 print(f"Augmenting {item} with {augmentation.__name__}")
@@ -204,3 +227,11 @@ if __name__ == "__main__":
                 # limit to one base example for testing
                 # if index == 0:
                 #     break
+    
+    return f"./data/augmented_stage_{stage_num}"
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        augment(sys.argv[1])
+    else:
+        print("Usage: `python augment.py <data_path>`")

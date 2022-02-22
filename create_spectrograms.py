@@ -1,5 +1,5 @@
 """
-Usage: `python create_spectrogram.py <dir>`
+Usage: `python create_spectrogram.py <data_path>`
 
 Takes in command line argument for directory containing the data in the format:
 
@@ -11,6 +11,7 @@ The parent directory doesn't have to be named 'data' but the children directorie
 Inside of "positive" and "negative" should be only audio files
 """
 
+from math import ceil
 import os
 import sys
 import random
@@ -29,7 +30,12 @@ from augment import audiosegment_to_numpy_array
 
 matplotlib.use("Agg")
 
-def convert_audio_to_spectogram(filepath, normalize=False, augment=True):
+def convert_audio_to_spectrogram(filepath, normalize=False, augment=True):
+    # load sound with pydub
+    snd = AudioSegment.from_file(filepath)
+    return audio_to_spectrogram(snd, normalize, augment)
+
+def audio_to_spectrogram(snd : AudioSegment, normalize=False, augment=True):
     """
     ## create a spectrogram from an audio file
     
@@ -42,8 +48,6 @@ def convert_audio_to_spectogram(filepath, normalize=False, augment=True):
     - A PIL.Image object of the spectrogram
     """
     
-    # load sound with pydub
-    snd = AudioSegment.from_file(filepath)
     if normalize:
         snd = effects.normalize(snd)
 
@@ -96,7 +100,7 @@ def convert_specs(inputs, return_list):
         if (parent_dir not in ["positive", "negative"]):
             raise Exception("Parent directory of file must be either 'positive' or 'negative'.")
 
-        img = convert_audio_to_spectogram(item)
+        img = convert_audio_to_spectrogram(item)
         images.append((img, f"./data/spec/{parent_dir}/{filename_base}.png"))
         counter += 1
         print(f"{parent_dir} spectrogram {counter}/{len(inputs)}")
@@ -108,8 +112,7 @@ def split(a, n):
     k, m = divmod(len(a), n)
     return list(a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
 
-if __name__ == "__main__":
-    data_dir = sys.argv[1]
+def create_spectrograms(data_dir):
     if data_dir.endswith("/"): # trim trailing slash
         data_dir = data_dir[:-1]
 
@@ -127,7 +130,7 @@ if __name__ == "__main__":
     random.shuffle(target_files) # if this script is stopped or fails part of the way through, we want the output to be evenly mixed
 
     # process in batches so that we don't run out of memory and give the CPU a few seconds to cool off every now and then
-    batches = split(target_files, round(len(target_files) / 1000))
+    batches = split(target_files, ceil(len(target_files) / 1000))
 
     print(f"Processing data with {len(batches)} batches of size ~{len(batches[0])} each.")
 
@@ -153,3 +156,9 @@ if __name__ == "__main__":
         
         for lst in return_list:
             save_spectrograms_as_png(lst)
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        create_spectrograms(sys.argv[1])
+    else:
+        print("Usage: `python create_spectrogram.py <data_path>`")
