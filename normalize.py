@@ -31,6 +31,11 @@ def trimmed_silence(sound : AudioSegment):
     start_trim = detect_leading_silence(sound)
     end_trim = detect_leading_silence(sound.reverse())
     duration = len(sound)
+    end = duration - (end_trim - 300)
+    # print(f"{start_trim=}, {end=}, {duration=}")
+    if start_trim >= duration:
+        return sound
+
     return sound[start_trim:duration - (end_trim - 300)]
 
 def trimmed_silence_from_file(filepath):
