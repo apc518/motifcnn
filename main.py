@@ -26,14 +26,22 @@ def predict(model, audio_path):
         input_arr = tf.keras.preprocessing.image.img_to_array(image)
         input_arr = np.array([input_arr])
 
-        predictions = model.predict(input_arr)
+        predictions = model.predict(input_arr).tolist()[0]
 
-        if np.argmax(predictions[0]) == 1:
-            print(f'Yes ({(100 * predictions[0][1]):.2f}%)')
-        elif np.argmax(predictions[0]) == 0:
-            print(f'No ({(100 * predictions[0][0]):.2f}%)')
-        else:
-            print("an error has occurred")
+        if len(predictions) == 2:
+            if predictions[1] > predictions[0]:
+                print(f'Yes ({(100 * predictions[1]):.2f}%)')
+            else:
+                print(f'No ({(100 * (1 - predictions[0])):.2f}%)')
+        elif len(predictions) == 1:
+            if predictions[0] > 0.5:
+                print(f'Yes ({(100 * predictions[0]):.2f}%)')
+            else:
+                print(f'No ({(100 * (1 - predictions[0])):.2f}%)')
+
+
+        print(predictions)
+
         
         # print(f'\t{predictions=}')
 
