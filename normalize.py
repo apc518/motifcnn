@@ -49,16 +49,19 @@ def normalize(data_dir):
         
         counter = 0
         for item in os.listdir(f"{data_dir}/{category}"):
-            print(f"trimming {item}")
+            try:
+                print(f"trimming {item}")
 
-            trimmed_item = trimmed_silence(AudioSegment.from_file(f"{data_dir}/{category}/{item}"))
-            normalized_item = effects.normalize(trimmed_item)
-            normalized_item.export(f"{out_dir}/{category}/{item}_trimmed.mp3", format='mp3')
-            
-            # limit for testing purposes
-            # if counter >= 5:
-            #     break
-            # counter += 1
+                trimmed_item = trimmed_silence(AudioSegment.from_file(f"{data_dir}/{category}/{item}"))
+                normalized_item = effects.normalize(trimmed_item)
+                normalized_item.export(f"{out_dir}/{category}/{item}_trimmed.mp3", format='mp3')
+                
+                # limit for testing purposes
+                # if counter >= 5:
+                #     break
+                # counter += 1
+            except Exception as e:
+                print(e)
     
     return out_dir
 

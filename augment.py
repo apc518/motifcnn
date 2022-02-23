@@ -218,15 +218,19 @@ def augment(data_dir):
             
             counter = 0
             for item in os.listdir(indir):
-                clip = AudioSegment.from_file(f"{indir}/{item}")
+                try:
+                    clip = AudioSegment.from_file(f"{indir}/{item}")
 
-                # apply augmentation
-                print(f"Augmenting {item} with {augmentation.__name__}")
-                augmentation(clip, f"{outdir}/{item}")
+                    # apply augmentation
+                    print(f"Augmenting {item} with {augmentation.__name__}")
+                    augmentation(clip, f"{outdir}/{item}")
 
-                # limit to one base example for testing
-                # if index == 0:
-                #     break
+                    # limit to one base example for testing
+                    # if index == 0:
+                    #     break
+                except Exception as e:
+                    print(e)
+
     
     return f"./data/augmented_stage_{stage_num}"
 

@@ -95,15 +95,18 @@ def convert_specs(inputs, return_list):
     images = []
     counter = 0
     for item in inputs:
-        parent_dir = item.rsplit("/", 2)[1]
-        filename_base = item.rsplit("/", 1)[1].rsplit(".", 1)[0]
-        if (parent_dir not in ["positive", "negative"]):
-            raise Exception("Parent directory of file must be either 'positive' or 'negative'.")
+        try:
+            parent_dir = item.rsplit("/", 2)[1]
+            filename_base = item.rsplit("/", 1)[1].rsplit(".", 1)[0]
+            if (parent_dir not in ["positive", "negative"]):
+                raise Exception("Parent directory of file must be either 'positive' or 'negative'.")
 
-        img = convert_audio_to_spectrogram(item)
-        images.append((img, f"./data/spec/{parent_dir}/{filename_base}.png"))
-        counter += 1
-        print(f"{parent_dir} spectrogram {counter}/{len(inputs)}")
+            img = convert_audio_to_spectrogram(item)
+            images.append((img, f"./data/spec/{parent_dir}/{filename_base}.png"))
+            counter += 1
+            print(f"{parent_dir} spectrogram {counter}/{len(inputs)}")
+        except Exception as e:
+            print(e)
     
     return_list.append(images)
 
