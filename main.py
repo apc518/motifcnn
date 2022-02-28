@@ -32,18 +32,12 @@ def predict(model, audio_path):
             if predictions[1] > predictions[0]:
                 print(f'Yes ({(100 * predictions[1]):.2f}%)')
             else:
-                print(f'No ({(100 * (1 - predictions[0])):.2f}%)')
+                print(f'No ({(100 * predictions[0]):.2f}%)')
         elif len(predictions) == 1:
             if predictions[0] > 0.5:
                 print(f'Yes ({(100 * predictions[0]):.2f}%)')
             else:
                 print(f'No ({(100 * (1 - predictions[0])):.2f}%)')
-
-
-        print(predictions)
-
-        
-        # print(f'\t{predictions=}')
 
         # clean up
         os.remove(spec_temp_file_name)
