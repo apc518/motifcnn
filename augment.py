@@ -142,11 +142,15 @@ def audiosegment_to_numpy_array(audiosegment):
     """ extracts and returns the numpy array of samples from a pydub AudioSegment """
 
     channel_sounds = audiosegment.split_to_mono()
-    samples = [s.get_array_of_samples() for s in channel_sounds]
+    samples = [s.get_array_of_samples() for s in channel_sounds[:1]]
+
+    print(len(samples[0]))
 
     fp_arr = np.array(samples).T.astype(np.float32)
     fp_arr /= np.iinfo(samples[0].typecode).max
     fp_arr = fp_arr.reshape(-1)
+
+    print(np.shape(fp_arr))
 
     return fp_arr
 
@@ -196,6 +200,41 @@ def timestretch(clip : AudioSegment, outpath_stub, duplicate_original=True):
     
     # save as wav, because soundfile doesnt know how to save as mp3
     sf.write(f"{outpath_stub}_stretched.wav", combined, sample_rate)
+
+
+### Pitch Shifting
+
+def pitch_shift(clip : AudioSegment, outpath_stub, duplicate_original=True, num_times=2):
+    """
+    # Pitch shifts the clip and saves.
+    Also saves a copy without pitch shifting
+    
+    ### Arguments:
+    - `outpath_stub` -- destination path including name of original file.
+        Ex: with outpath_stub=`./timeshift_clips/myclip1.mp3` output may look like:
+        `./timeshift_clips/myclip1_copy.mp3`
+        `./timeshift_clips/myclip1_pitchshift_0.mp3`
+        `./timeshift_clips/myclip1_pitchshift_1.mp3`
+    
+    - `min_shift` -- The minium number of milliseconds the timeshift may be. Default is 250 ms.
+
+    - `max_shift` -- The maximum number of milliseconds the timeshift may be. Default is 1000 ms. 
+
+    - `num_times` -- The number of times to copy the original sample and add a random timeshift. Default is 3
+        
+    - `dulplicate_original -- Whether or not to include a copy of the original in the output.
+                            defaults to true.
+    """
+    if duplicate_original:
+        clip.export(f'{outpath_stub}_copy.mp3', format="mp3")
+    
+    sr = clip.frame_rate
+    print("sr=", sr)
+    audio_data = audiosegment_to_numpy_array(clip)
+
+    for i in range(num_times):
+        audio_data = pyrubberband.pitch_shift(audio_data, sr, 6)
+        sf.write(f"{outpath_stub}_pitchshifted_{i}.wav", audio_data, sr)
 
 
 def augment(data_dir):
