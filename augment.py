@@ -20,6 +20,7 @@ import sys
 import random
 from random import randrange
 from math import ceil
+from pathlib import Path
 
 import numpy as np
 import soundfile as sf
@@ -144,13 +145,13 @@ def audiosegment_to_numpy_array(audiosegment):
     channel_sounds = audiosegment.split_to_mono()
     samples = [s.get_array_of_samples() for s in channel_sounds[:1]]
 
-    print(len(samples[0]))
+    # print(len(samples[0]))
 
     fp_arr = np.array(samples).T.astype(np.float32)
     fp_arr /= np.iinfo(samples[0].typecode).max
     fp_arr = fp_arr.reshape(-1)
 
-    print(np.shape(fp_arr))
+    # print(np.shape(fp_arr))
 
     return fp_arr
 
@@ -229,7 +230,7 @@ def pitch_shift(clip : AudioSegment, outpath_stub, duplicate_original=True, num_
         clip.export(f'{outpath_stub}_copy.mp3', format="mp3")
     
     sr = clip.frame_rate
-    print("sr=", sr)
+    # print("sr=", sr)
     audio_data = audiosegment_to_numpy_array(clip)
 
     for i in range(num_times):
@@ -243,15 +244,17 @@ def augment(data_dir):
     returns the directory of the final stage
     """
 
+    data_dir_parent = Path(data_dir).parent
+
     stage_num = 0
     for pos_or_neg in ["positive", "negative"]:    
         for index, augmentation in enumerate([timestretch, distort, addnoise]):
             stage_num = index + 1
 
-            indir = f"{data_dir}/{pos_or_neg}" if index == 0 else f"./data/augmented_stage_{index}/{pos_or_neg}"
-            outdir = f"./data/augmented_stage_{stage_num}/{pos_or_neg}"
-            if not os.path.isdir(f"./data/augmented_stage_{stage_num}"):
-                os.mkdir(f"./data/augmented_stage_{stage_num}")
+            indir = f"{data_dir}/{pos_or_neg}" if index == 0 else f"{data_dir_parent}/augmented_stage_{index}/{pos_or_neg}"
+            outdir = f"{data_dir_parent}/augmented_stage_{stage_num}/{pos_or_neg}"
+            if not os.path.isdir(f"{data_dir_parent}/augmented_stage_{stage_num}"):
+                os.mkdir(f"{data_dir_parent}/augmented_stage_{stage_num}")
             if not os.path.isdir(outdir):
                 os.mkdir(outdir)
             
@@ -271,7 +274,7 @@ def augment(data_dir):
                     print(e)
 
     
-    return f"./data/augmented_stage_{stage_num}"
+    return f"{data_dir_parent}/augmented_stage_{stage_num}"
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

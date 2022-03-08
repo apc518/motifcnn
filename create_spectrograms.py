@@ -13,6 +13,7 @@ Inside of "positive" and "negative" should be only audio files
 
 from math import ceil
 import os
+from pathlib import Path
 import sys
 import random
 from multiprocessing import Process, Manager
@@ -96,15 +97,20 @@ def convert_specs(inputs, return_list):
     counter = 0
     for item in inputs:
         try:
-            parent_dir = item.rsplit("/", 2)[1]
+            pos_neg_dir = Path(item).parent
             filename_base = item.rsplit("/", 1)[1].rsplit(".", 1)[0]
-            if (parent_dir not in ["positive", "negative"]):
+            pos = str(pos_neg_dir).endswith("positive")
+            neg = str(pos_neg_dir).endswith("negative")
+            if not (pos or neg):
                 raise Exception("Parent directory of file must be either 'positive' or 'negative'.")
 
+            data_dir = pos_neg_dir.parent
+            parent_dir = data_dir.parent
+
             img = convert_audio_to_spectrogram(item)
-            images.append((img, f"./data/spec/{parent_dir}/{filename_base}.png"))
+            images.append((img, f"{parent_dir}/spec/{'positive' if pos else 'negative'}/{filename_base}.png"))
             counter += 1
-            print(f"{parent_dir} spectrogram {counter}/{len(inputs)}")
+            print(f"{pos_neg_dir} spectrogram {counter}/{len(inputs)}")
         except Exception as e:
             print(e)
     
@@ -119,12 +125,14 @@ def create_spectrograms(data_dir):
     if data_dir.endswith("/"): # trim trailing slash
         data_dir = data_dir[:-1]
 
-    # ensure output directories are present
-    if not os.path.isdir("./data/spec/positive"):
-        os.makedirs("./data/spec/positive")
+    data_dir_parent = Path(data_dir).parent
 
-    if not os.path.isdir("./data/spec/negative"):
-        os.makedirs("./data/spec/negative")
+    # ensure output directories are present
+    if not os.path.isdir(f"{data_dir_parent}/spec/positive"):
+        os.makedirs(f"{data_dir_parent}/spec/positive")
+
+    if not os.path.isdir(f"{data_dir_parent}/spec/negative"):
+        os.makedirs(f"{data_dir_parent}/spec/negative")
 
     # full list of all target files
     target_files = [f'{data_dir}/positive/{x}' for x in os.listdir(f'{data_dir}/positive')]
