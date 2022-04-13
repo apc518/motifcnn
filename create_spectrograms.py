@@ -36,6 +36,7 @@ def convert_audio_to_spectrogram(filepath, normalize=False, augment=True):
     snd = AudioSegment.from_file(filepath)
     return audio_to_spectrogram(snd, normalize, augment)
 
+
 def audio_to_spectrogram(snd : AudioSegment, normalize=False, augment=True):
     """
     ## create a spectrogram from an audio file
@@ -87,9 +88,11 @@ def audio_to_spectrogram(snd : AudioSegment, normalize=False, augment=True):
     im_resized = im_cropped.resize((100, 300))
     return im_resized
 
+
 def save_spectrograms_as_png(specs):
     for img, outpath in specs:
         img.save(outpath)
+
 
 def convert_specs(inputs, return_list):
     # all files in the inputs list to spectrograms

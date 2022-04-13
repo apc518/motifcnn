@@ -247,7 +247,7 @@ def augment(data_dir):
     data_dir_parent = Path(data_dir).parent
 
     stage_num = 0
-    for pos_or_neg in ["positive", "negative"]:    
+    for pos_or_neg in ["positive", "negative"]:
         for index, augmentation in enumerate([timestretch, distort, addnoise]):
             stage_num = index + 1
 
