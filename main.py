@@ -31,16 +31,17 @@ def predict(model, audio_path):
 
         predictions = model.predict(input_arr).tolist()[0]
 
-        if len(predictions) == 2:
-            if predictions[1] > predictions[0]:
-                print(f'Yes ({(100 * predictions[1]):.2f}%)')
-            else:
-                print(f'No ({(100 * predictions[0]):.2f}%)')
-        elif len(predictions) == 1:
+        # some of our models have only one output neuron, others have two
+        if len(predictions) == 1:
             if predictions[0] > 0.5:
                 print(f'Yes ({(100 * predictions[0]):.2f}%)')
             else:
                 print(f'No ({(100 * (1 - predictions[0])):.2f}%)')
+        elif len(predictions) == 2:
+            if predictions[1] > predictions[0]:
+                print(f'Yes ({(100 * predictions[1]):.2f}%)')
+            else:
+                print(f'No ({(100 * predictions[0]):.2f}%)')
 
         # clean up
         os.remove(SPEC_TEMP_FILE)
