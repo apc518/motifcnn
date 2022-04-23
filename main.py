@@ -18,12 +18,17 @@ SPEC_TEMP_FILE = "./spec.png"
 
 
 def predict(model, audio_path):
-    try:
-        # create spectrogram
-        snd = trimmed_silence_from_file(audio_path)
-        spec = audio_to_spectrogram(snd, normalize=True, augment=False)
-        spec.save(SPEC_TEMP_FILE)
+    # create spectrogram
+    snd = trimmed_silence_from_file(audio_path)
+    spec = audio_to_spectrogram(snd, normalize=True, augment=False)
+    spec.save(SPEC_TEMP_FILE)
 
+    # need to try/catch the rest and record if an exception occurred so that we
+    # ensure the spec temp file will be removed, but also that we throw an exception to the caller
+
+    raise_exception = True
+
+    try:
         # preprocess the spectrogram
         image = tf.keras.preprocessing.image.load_img(SPEC_TEMP_FILE, target_size=(100, 300))
         input_arr = tf.keras.preprocessing.image.img_to_array(image)
@@ -42,11 +47,16 @@ def predict(model, audio_path):
                 print(f'Yes ({(100 * predictions[1]):.2f}%)')
             else:
                 print(f'No ({(100 * predictions[0]):.2f}%)')
-
-        # clean up
-        os.remove(SPEC_TEMP_FILE)
+        
+        raise_exception = False
     except Exception as e:
         print(e)
+    
+    # clean up
+    os.remove(SPEC_TEMP_FILE)
+
+    if raise_exception:
+        raise Exception(f"Problem occurred on {audio_path}")
 
 
 
@@ -67,10 +77,15 @@ def main(model_path):
     if len(sys.argv) > 2:
         test_dir = sys.argv[2]
         for category in os.listdir(test_dir):
+            if not os.path.isdir(f"{test_dir}/{category}"):
+                continue
             for item in os.listdir(f"{test_dir}/{category}"):
                 item_path = f"{test_dir}/{category}/{item}"
                 print(f"{item_path}: ", end="")
-                predict(model, f"{test_dir}/{category}/{item}")
+                try:
+                    predict(model, f"{test_dir}/{category}/{item}")
+                except:
+                    break
 
     while True:
         # get audio file from user
