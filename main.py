@@ -39,14 +39,14 @@ def predict(model, audio_path):
         # some of our models have only one output neuron, others have two
         if len(predictions) == 1:
             if predictions[0] > 0.5:
-                print(f'Yes ({(100 * predictions[0]):.2f}%)')
+                print(f'Yes ({predictions[0]:.4f})')
             else:
-                print(f'No ({(100 * (1 - predictions[0])):.2f}%)')
+                print(f'No ({predictions[0]:.4f})')
         elif len(predictions) == 2:
             if predictions[1] > predictions[0]:
-                print(f'Yes ({(100 * predictions[1]):.2f}%)')
+                print(f'Yes ({predictions[0]:.4f}, {predictions[1]:.4f})')
             else:
-                print(f'No ({(100 * predictions[0]):.2f}%)')
+                print(f'No ({predictions[0]:.4f}, {predictions[1]:.4f})')
         
         raise_exception = False
     except Exception as e:
