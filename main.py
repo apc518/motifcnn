@@ -9,6 +9,7 @@ import sys
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
+from pydub import AudioSegment
 
 from create_spectrograms import audio_to_spectrogram
 from normalize import trimmed_silence_from_file
@@ -17,9 +18,13 @@ from normalize import trimmed_silence_from_file
 SPEC_TEMP_FILE = "./spec.png"
 
 
-def predict(model, audio_path):
-    # create spectrogram
+def predict_file(model, audio_path, do_print=True):
     snd = trimmed_silence_from_file(audio_path)
+    return predict(model, snd, do_print=do_print, audio_path=audio_path)
+
+
+def predict(model, snd : AudioSegment, do_print=True, audio_path=None):
+    # create spectrogram
     spec = audio_to_spectrogram(snd, normalize=True, augment=False)
     spec.save(SPEC_TEMP_FILE)
 
@@ -36,18 +41,23 @@ def predict(model, audio_path):
 
         predictions = model.predict(input_arr).tolist()[0]
 
+        msg = None
+
         # some of our models have only one output neuron, others have two
         if len(predictions) == 1:
             if predictions[0] > 0.5:
-                print(f'Yes ({predictions[0]:.4f})')
+                msg = f'Yes ({predictions[0]:.4f})'
             else:
-                print(f'No ({predictions[0]:.4f})')
+                msg = f'No ({predictions[0]:.4f})'
         elif len(predictions) == 2:
             if predictions[1] > predictions[0]:
-                print(f'Yes ({predictions[0]:.4f}, {predictions[1]:.4f})')
+                msg = f'Yes ({predictions[0]:.4f}, {predictions[1]:.4f})'
             else:
-                print(f'No ({predictions[0]:.4f}, {predictions[1]:.4f})')
+                msg = f'No ({predictions[0]:.4f}, {predictions[1]:.4f})'
         
+        if do_print:
+            print(msg)
+
         raise_exception = False
     except Exception as e:
         print(e)
@@ -57,7 +67,8 @@ def predict(model, audio_path):
 
     if raise_exception:
         raise Exception(f"Problem occurred on {audio_path}")
-
+    else:
+        return msg.lower().startswith("yes")
 
 
 def main(model_path):
@@ -83,7 +94,7 @@ def main(model_path):
                 item_path = f"{test_dir}/{category}/{item}"
                 print(f"{item_path}: ", end="")
                 try:
-                    predict(model, f"{test_dir}/{category}/{item}")
+                    predict_file(model, f"{test_dir}/{category}/{item}")
                 except:
                     break
 
@@ -95,7 +106,10 @@ def main(model_path):
         if audio_path == "":
             continue
 
-        predict(model, audio_path)
+        try:
+            predict_file(model, audio_path)
+        except:
+            print("Not found")
     
 
 

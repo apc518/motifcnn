@@ -28,6 +28,7 @@ import matplotlib
 from pydub import AudioSegment, effects
 
 from augment import audiosegment_to_numpy_array
+from memory_profiler import profile
 
 matplotlib.use("Agg")
 
@@ -36,7 +37,7 @@ def convert_audio_to_spectrogram(filepath, normalize=False, augment=True):
     snd = AudioSegment.from_file(filepath)
     return audio_to_spectrogram(snd, normalize, augment)
 
-
+# @profile
 def audio_to_spectrogram(snd : AudioSegment, normalize=False, augment=True):
     """
     ## create a spectrogram from an audio file
@@ -80,6 +81,7 @@ def audio_to_spectrogram(snd : AudioSegment, normalize=False, augment=True):
 
     img_buf = io.BytesIO()
     plt.savefig(img_buf, format="png")
+    plt.clf()
     plt.close() # dont display the spectrogram on screen, and dont leak memory
 
     # crop the image to get rid of useless high and low frequencies
